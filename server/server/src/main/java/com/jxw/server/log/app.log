@@ -1,0 +1,17 @@
+2025-03-06 00:08:18 [main] WARN  o.s.b.t.j.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer - 
+
+Found multiple occurrences of org.json.JSONObject on the class path:
+
+	jar:file:/C:/Users/jxw/.m2/repository/com/vaadin/external/google/android-json/0.0.20131108.vaadin1/android-json-0.0.20131108.vaadin1.jar!/org/json/JSONObject.class
+	jar:file:/C:/Users/jxw/.m2/repository/org/json/json/20231013/json-20231013.jar!/org/json/JSONObject.class
+
+You may wish to exclude one of them to ensure predictable runtime behavior
+
+2025-03-06 00:08:18 [main] INFO  com.jxw.server.LLMTest - Starting LLMTest using Java 22.0.2 with PID 37280 (started by jxw in C:\Users\jxw\OneDrive\Desktop\Oppo\develop\GuideHand\server)
+2025-03-06 00:08:18 [main] INFO  com.jxw.server.LLMTest - No active profile set, falling back to 1 default profile: "default"
+2025-03-06 00:08:20 [main] INFO  com.jxw.server.LLMTest - Started LLMTest in 2.895 seconds (process running for 3.854)
+2025-03-06 00:08:21 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2025-03-06 00:08:22 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@5b895e76
+2025-03-06 00:08:22 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2025-03-06 00:08:50 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2025-03-06 00:08:50 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
