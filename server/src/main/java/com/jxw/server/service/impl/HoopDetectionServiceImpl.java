@@ -2,6 +2,7 @@ package com.jxw.server.service.impl;
 
 import com.jxw.server.service.IHoopDetectionService;
 import com.jxw.server.util.scriptRunner.ScriptRunner;
+import org.springframework.stereotype.Service;
 
 import java.awt.*;
 import java.io.BufferedReader;
@@ -10,6 +11,7 @@ import java.io.InputStreamReader;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 
+@Service
 public class HoopDetectionServiceImpl implements IHoopDetectionService {
 
     @Override

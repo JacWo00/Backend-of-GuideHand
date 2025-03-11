@@ -1,13 +1,15 @@
 package com.jxw.server.session;
 import java.awt.*;
 import java.io.IOException;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
-import com.jxw.server.entity.BodyAngleData;
-import com.jxw.server.entity.BodyDotData;
-import com.jxw.server.entity.LLMInput;
+
+import com.jxw.server.entity.*;
 import com.jxw.server.service.IBallDetectionService;
 import com.jxw.server.service.IHoopDetectionService;
 import com.jxw.server.service.IPoseDetectionService;
+import com.jxw.server.service.IUserTrainingRecordsService;
 import com.jxw.server.service.impl.LLMService;
 import com.jxw.server.util.AngleCalculator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +39,10 @@ public class UserSession {
     @Autowired
     protected LLMService llmService;
 
-    private List<String> analysisResultList = new ArrayList<>();
+    @Autowired
+    private IUserTrainingRecordsService userTrainingRecordsService;
+
+    private List<ShootingAnalysis> analysisResultList = new ArrayList<>();
 
     private Boolean ballDown = false;
 
@@ -79,6 +84,10 @@ public class UserSession {
 
     private Point ballPosition;
 
+    private Instant lastActivityTime;  // 记录最后活动时间
+
+    private static final long SESSION_TIMEOUT_SECONDS = 2 * 60 * 60;  // 会话有效期2小时
+
     public UserSession(String userId) {
         this.userId = userId;
     }
@@ -87,6 +96,7 @@ public class UserSession {
         this.userId = userId;
         this.theme = theme;
         this.trainingMethod = trainingMethod;
+        this.lastActivityTime = Instant.now();
     }
 
     public UserSession() {
@@ -104,8 +114,25 @@ public class UserSession {
     public void stopTraining() {
         // 如果是多次投篮，则保存数据并清空缓存；如果是单次投篮，则直接清空缓存
         if (trainingMethod.equals("multiple")) {
-            // baocun shuju
+            //     public UserTrainingRecords(Long userId, LocalDate trainingDate, BigDecimal trainingTime, String shootingType, String trainingMethod,
+            //     Integer attempts, Integer hits, String aiAnalysis, String aiSuggestions, String weaknessPoints) {
+            StringBuilder sb = new StringBuilder();
+            for(ShootingAnalysis shootingAnalysis:analysisResultList){
 
+                sb.append(shootingAnalysis.getAnalysis());
+            }
+            ShootingAnalysis result = new ShootingAnalysis(llmService.analysis(sb.toString(), userId));
+            UserTrainingRecords userTrainingRecords = new UserTrainingRecords(userId, LocalDate.now(), theme, trainingMethod, isGoalList.size(), (int) isGoalList.stream().filter(b -> b).count(),
+                    result.getAnalysis(), result.getSuggestions(), result.getWeaknessPoints());
+            userTrainingRecordsService.save(userTrainingRecords);
+        }
+        else if(trainingMethod.equals("single")){
+            UserTrainingRecords userTrainingRecords = new UserTrainingRecords(userId, LocalDate.now(), theme, trainingMethod, isGoalList.size(), (int) isGoalList.stream().filter(b -> b).count(),
+                    analysisResultList.get(0).getAnalysis(), analysisResultList.get(0).getSuggestions(), analysisResultList.get(0).getWeaknessPoints());
+            userTrainingRecordsService.save(userTrainingRecords);
+        }
+        else{
+            throw new RuntimeException("trainingMethod error");
         }
         clean();
     }
@@ -236,7 +263,8 @@ public class UserSession {
             // 将投篮数据出传送给LLM
             llmInput.setTheme(theme);
             String answer=getLlmService().analysis(getLlmInput(),getUserId());
-            getAnalysisResultList().add(answer);
+            ShootingAnalysis shootingAnalysis = new ShootingAnalysis(answer);
+            getAnalysisResultList().add(shootingAnalysis);
 
             getIsGoalList().add(false);
             if(!getWristPositionList().isEmpty())getWristPositionList().clear();
@@ -263,7 +291,7 @@ public class UserSession {
                     //判断完是否进球后，如果是单次投篮，则保存此次训练数据，如果是多次投篮，则在stopTraining中保存
                     if(trainingMethod.equals("single")){
                         // 保存本次数据到数据库
-
+                        stopTraining();
                     }
                     setUserState(UserState.UNKNOWN);
                     setBallDown(false);
@@ -278,6 +306,16 @@ public class UserSession {
         }
     }
 
+    // 判断会话是否过期
+    public boolean isExpired() {
+        return Instant.now().isAfter(lastActivityTime.plusSeconds(SESSION_TIMEOUT_SECONDS));
+    }
+
+    // 刷新会话的最后活动时间
+    public UserSession refreshSession() {
+        this.lastActivityTime = Instant.now();
+        return this;
+    }
 
     // Getter 和 Setter 方法
     public IBallDetectionService getBallDetectionService() {
@@ -320,11 +358,11 @@ public class UserSession {
         this.llmService = llmService;
     }
 
-    public List<String> getAnalysisResultList() {
+    public List<ShootingAnalysis> getAnalysisResultList() {
         return analysisResultList;
     }
 
-    public void setAnalysisResultList(List<String> analysisResultList) {
+    public void setAnalysisResultList(List<ShootingAnalysis> analysisResultList) {
         this.analysisResultList = analysisResultList;
     }
 

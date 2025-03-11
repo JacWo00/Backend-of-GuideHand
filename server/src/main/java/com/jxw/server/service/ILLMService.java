@@ -9,5 +9,7 @@ import java.util.ArrayList;
 public interface ILLMService {
     public String analysis(LLMInput llmInput, String userId);
 
+    String analysis(String input, String userId);
+
     public String sumUpAnalysis(ArrayList<String> analysisResultList, String userId);
 }

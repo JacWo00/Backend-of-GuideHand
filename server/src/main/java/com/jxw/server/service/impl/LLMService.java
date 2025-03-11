@@ -36,6 +36,19 @@ public class LLMService implements ILLMService {
     }
 
     @Override
+    public String analysis(String input, String userId) {
+        UserInfo userInfo = userInfoService.getById(userId);
+        String sessionId = userInfo.getSessionId();
+        if (sessionId == null) {
+            sessionId = Session.getSessionId();
+            userInfo.setSessionId(sessionId);
+        }
+        String requestId = Session.getRequestId();
+        String result = myWebSocket.webSocketInvoke(input, sessionId, requestId);
+        return result;
+    }
+
+    @Override
     public String sumUpAnalysis(ArrayList<String> analysisResultList, String userId) {
         String input=String.join("/n",analysisResultList);
         String sessionId = userInfoService.getById(userId).getSessionId();
