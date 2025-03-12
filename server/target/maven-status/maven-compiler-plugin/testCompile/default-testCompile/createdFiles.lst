@@ -1,0 +1,5 @@
+com\jxw\server\LogTest.class
+com\jxw\server\shootingAnglesTest.class
+com\jxw\server\ServerApplicationTests.class
+com\jxw\server\TokenTest.class
+com\jxw\server\LLMTest.class
