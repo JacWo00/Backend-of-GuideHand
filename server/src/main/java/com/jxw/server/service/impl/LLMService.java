@@ -1,6 +1,6 @@
 package com.jxw.server.service.impl;
 
-import com.jxw.server.entity.LLMInput;
+import com.jxw.server.entity.ShootingAngles;
 import com.jxw.server.entity.UserInfo;
 import com.jxw.server.service.ILLMService;
 import com.jxw.server.util.llm.HttpSSE;
@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 @Service
 public class LLMService implements ILLMService {
@@ -21,26 +23,55 @@ public class LLMService implements ILLMService {
     HttpSSE httpSSE;
 
     @Override
-    public String analysis(LLMInput llmInput, String userId) {
-        UserInfo userInfo = userInfoService.getById(userId);
+    public String analysis(ShootingAngles shootingAngles, String userId) {
+        return invokeWebSocketAnalysis(shootingAngles.toFormattedString(), userId);
+    }
+
+    @Override
+    public String analysis(String input, String userId) {
+        return invokeWebSocketAnalysis(input, userId);
+    }
+
+    @Override
+    public String sumUpAnalysis(List<String> analysisResultList, String userId) {
+        // 修复换行符拼写错误，使用正确的\n
+        String input = String.join("\n", analysisResultList);
+        return invokeWebSocketAnalysis(input, userId);
+    }
+
+    /**
+     * 统一WebSocket调用方法
+     */
+    private String invokeWebSocketAnalysis(String input, String userId) {
+        final String sessionId = getOrCreateSessionId(userId);
+        final String requestId = Session.getRequestId();
+        return myWebSocket.webSocketInvoke(input, sessionId, requestId);
+    }
+
+    /**
+     * 获取或创建Session ID（包含用户信息更新）
+     */
+    private String getOrCreateSessionId(String userId) {
+        UserInfo userInfo = getUserInfo(userId);
         String sessionId = userInfo.getSessionId();
-        if(sessionId==null){
+
+        if (sessionId.isEmpty()) {
             sessionId = Session.getSessionId();
             userInfo.setSessionId(sessionId);
             userInfoService.updateById(userInfo);
         }
-        String requestId = Session.getRequestId();
-
-        String result = myWebSocket.webSocketInvoke(llmInput.toFormattedString(),sessionId, requestId);
-        return result;
+        return sessionId;
     }
 
-    @Override
-    public String sumUpAnalysis(ArrayList<String> analysisResultList, String userId) {
-        String input=String.join("/n",analysisResultList);
-        String sessionId = userInfoService.getById(userId).getSessionId();
-        String requestId = Session.getRequestId();
-        String result = myWebSocket.webSocketInvoke(input,sessionId, requestId);
-        return result;
+    /**
+     * 带空校验的用户信息获取
+     */
+    private UserInfo getUserInfo(String userId) {
+        Objects.requireNonNull(userId, "User ID cannot be null");
+        UserInfo userInfo = userInfoService.getById(userId);
+        if (userInfo == null) {
+            throw new RuntimeException("User not found for ID: " + userId);
+        }
+        return userInfo;
     }
 }

@@ -1,5 +1,7 @@
 package com.jxw.server.service;
 
+import com.github.jeffreyning.mybatisplus.service.IMppService;
+import com.jxw.server.dto.LatestTrainingSummary;
 import com.jxw.server.entity.UserTrainingRecords;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -14,9 +16,14 @@ import java.util.List;
  * @author author
  * @since 2025-02-25
  */
-public interface IUserTrainingRecordsService extends IService<UserTrainingRecords> {
-
-    List<UserTrainingRecords> findByUserIdAndTrainingDateBetween(Long userId, LocalDate startDate, LocalDate endDate);
+public interface IUserTrainingRecordsService extends IMppService<UserTrainingRecords> {
+    List<UserTrainingRecords> findByUserIdAndTrainingDateBetween(String userId, LocalDate startDate, LocalDate endDate);
 
     boolean save(UserTrainingRecords userTrainingRecords);
+
+    LatestTrainingSummary getLatestTraining(String userId);
+
+    List<LatestTrainingSummary> getLast7DaysSummary(String userId);
+
+    UserTrainingRecords findByUserIdAndRecordId(String userId,String recordId);
 }

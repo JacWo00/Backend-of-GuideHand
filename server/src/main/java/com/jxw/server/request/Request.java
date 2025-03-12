@@ -18,6 +18,20 @@ public class Request {
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate endDate;
 
+    private String userId;
+    private String trainingMethod;
+    private String theme;
+
+    // 需要有 getter 和 setter，Spring Boot 反序列化 JSON 需要它们
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
+
+    public String getTrainingMethod() { return trainingMethod; }
+    public void setTrainingMethod(String trainingMethod) { this.trainingMethod = trainingMethod; }
+
+    public String getTheme() { return theme; }
+    public void setTheme(String theme) { this.theme = theme; }
+
     // 无参构造
     public Request() {
     }

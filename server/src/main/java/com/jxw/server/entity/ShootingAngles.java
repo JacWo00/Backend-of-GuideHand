@@ -1,22 +1,50 @@
 package com.jxw.server.entity;
 
-import lombok.Data;
+import com.baomidou.mybatisplus.annotation.TableField;
 
-import java.util.Map;
-
-@Data
-public class LLMInput {
+public class ShootingAngles {
+    @TableField("user_id")
+    private String userId;              // 用户的ID
+    @TableField("record_id")
+    private String recordId;           // 训练记录的ID
+    @TableField("aiming_elbow_angle")
     private Double aimingElbowAngle;   // 准备时的肘部角度
+    @TableField("aiming_arm_angle")
     private Double aimingArmAngle;     // 准备时的手臂角度
+    @TableField("aiming_body_angle")
     private Double aimingBodyAngle;    // 准备时的身体角度
+    @TableField("aiming_knee_angle")
     private Double aimingKneeAngle;    // 准备时的膝盖角度
+    @TableField("release_elbow_angle")
     private Double releaseElbowAngle;  // 释放时的肘部角度
+    @TableField("release_arm_angle")
     private Double releaseArmAngle;    // 释放时的手臂角度
+    @TableField("release_body_angle")
     private Double releaseBodyAngle;   // 释放时的身体角度
+    @TableField("release_knee_angle")
     private Double releaseKneeAngle;   // 释放时的膝盖角度
+    @TableField("release_wrist_angle")
     private Double releaseWristAngle;  // 释放时的手腕角度
+    @TableField("release_ball_angle")
     private Double releaseBallAngle;   // 释放时的球的角度
-    private String theme;
+    @TableField("theme")
+    private String theme;              // 投篮训练的主题：mid shoot / three point shoot
+
+    public ShootingAngles(String userId, String recordId, Double aimingElbowAngle, Double aimingArmAngle, Double aimingBodyAngle, Double aimingKneeAngle, Double releaseElbowAngle, Double releaseArmAngle, Double releaseBodyAngle, Double releaseKneeAngle, Double releaseWristAngle, Double releaseBallAngle, String theme) {
+        this.userId = userId;
+        this.recordId = recordId;
+        this.aimingElbowAngle = aimingElbowAngle;
+        this.aimingArmAngle = aimingArmAngle;
+        this.aimingBodyAngle = aimingBodyAngle;
+        this.aimingKneeAngle = aimingKneeAngle;
+        this.releaseElbowAngle = releaseElbowAngle;
+        this.releaseArmAngle = releaseArmAngle;
+        this.releaseBodyAngle = releaseBodyAngle;
+        this.releaseKneeAngle = releaseKneeAngle;
+        this.releaseWristAngle = releaseWristAngle;
+        this.releaseBallAngle = releaseBallAngle;
+        this.theme = theme;
+    }
 
     public String toFormattedString() {
         StringBuilder sb = new StringBuilder();
@@ -37,14 +65,14 @@ public class LLMInput {
     }
 
     // 无参构造方法
-    public LLMInput() {
+    public ShootingAngles() {
     }
 
     // 有参构造方法
-    public LLMInput(Double aimingElbowAngle, Double aimingArmAngle, Double aimingBodyAngle,
-                    Double aimingKneeAngle, Double releaseElbowAngle, Double releaseArmAngle,
-                    Double releaseBodyAngle, Double releaseKneeAngle, Double releaseWristAngle,
-                    Double releaseBallAngle,String theme) {
+    public ShootingAngles(Double aimingElbowAngle, Double aimingArmAngle, Double aimingBodyAngle,
+                          Double aimingKneeAngle, Double releaseElbowAngle, Double releaseArmAngle,
+                          Double releaseBodyAngle, Double releaseKneeAngle, Double releaseWristAngle,
+                          Double releaseBallAngle, String theme) {
         this.aimingElbowAngle = aimingElbowAngle;
         this.aimingArmAngle = aimingArmAngle;
         this.aimingBodyAngle = aimingBodyAngle;
@@ -142,11 +170,38 @@ public class LLMInput {
         this.releaseBallAngle = releaseBallAngle;
     }
 
-    // toString 方法
+
+
+    public String getTheme() {
+        return theme;
+    }
+
+    public void setTheme(String theme) {
+        this.theme = theme;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public String getRecordId() {
+        return recordId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public void setRecordId(String recordId) {
+        this.recordId = recordId;
+    }
+
     @Override
     public String toString() {
-        return "LLMInput{" +
-                "aimingElbowAngle=" + aimingElbowAngle +
+        return "ShootingAngles{" +
+                "userId='" + userId + '\'' +
+                ", recordId='" + recordId + '\'' +
+                ", aimingElbowAngle=" + aimingElbowAngle +
                 ", aimingArmAngle=" + aimingArmAngle +
                 ", aimingBodyAngle=" + aimingBodyAngle +
                 ", aimingKneeAngle=" + aimingKneeAngle +
@@ -156,14 +211,7 @@ public class LLMInput {
                 ", releaseKneeAngle=" + releaseKneeAngle +
                 ", releaseWristAngle=" + releaseWristAngle +
                 ", releaseBallAngle=" + releaseBallAngle +
+                ", theme='" + theme + '\'' +
                 '}';
-    }
-
-    public String getTheme() {
-        return theme;
-    }
-
-    public void setTheme(String theme) {
-        this.theme = theme;
     }
 }
