@@ -1,7 +1,6 @@
 package com.jxw.server;
 
-import com.jxw.server.entity.LLMInput;
-import com.jxw.server.entity.UserInfo;
+import com.jxw.server.entity.ShootingAngles;
 import com.jxw.server.service.IUserInfoService;
 import com.jxw.server.service.impl.LLMService;
 import com.jxw.server.util.llm.HttpSSE;
@@ -23,7 +22,7 @@ public class LLMTest {
     @Test
     public void test1() {
         //userInfoService.save(new UserInfo("1","jxw","1",1.88,188.0,"1","1",21,null));
-        LLMInput example = new LLMInput(70.0, 75.0, 0.0, 170.0, 170.0, 80.0, 5.0, 170.0, 120.0, 40.0,"三分");
-        System.out.println(llmService.analysis(example, "1"));
+        ShootingAngles example = new ShootingAngles(70.0, 75.0, 0.0, 170.0, 170.0, 80.0, 5.0, 170.0, 120.0, 40.0,"三分");
+        System.out.println(llmService.analysis(example, "user_001"));
     }
 }

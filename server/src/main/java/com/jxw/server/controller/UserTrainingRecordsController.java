@@ -25,11 +25,10 @@ public class UserTrainingRecordsController {
     IUserTrainingRecordsService userTrainingRecordsService;
 
     @GetMapping("/recent-seven-days")
-    public List<UserTrainingRecords> findByUserIdAndTrainingDateBetween(@RequestBody Request request){
-        Long userID= request.getUserID();
-        LocalDate startDate=request.getStartDate();
-        LocalDate endDate=request.getEndDate();
-        return userTrainingRecordsService.findByUserIdAndTrainingDateBetween(userID,startDate,endDate);
+    public List<UserTrainingRecords> findByUserIdAndTrainingDateBetween(@RequestParam("userId") String userId,
+                                                                        @RequestParam("startDate") LocalDate startDate,
+                                                                        @RequestParam("endDate") LocalDate endDate){
+        return userTrainingRecordsService.findByUserIdAndTrainingDateBetween(userId,startDate,endDate);
     }
 
     @PostMapping("/add-records")

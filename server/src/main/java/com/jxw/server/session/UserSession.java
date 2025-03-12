@@ -6,10 +6,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 
 import com.jxw.server.entity.*;
-import com.jxw.server.service.IBallDetectionService;
-import com.jxw.server.service.IHoopDetectionService;
-import com.jxw.server.service.IPoseDetectionService;
-import com.jxw.server.service.IUserTrainingRecordsService;
+import com.jxw.server.service.*;
 import com.jxw.server.service.impl.LLMService;
 import com.jxw.server.util.AngleCalculator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,19 +22,21 @@ public class UserSession {
     private String theme;
 
     @Autowired
-    protected IBallDetectionService ballDetectionService;
+    private IBallDetectionService ballDetectionService;
 
     @Autowired
-    protected IPoseDetectionService poseDetectionService;
+    private IPoseDetectionService poseDetectionService;
 
     @Autowired
-    protected IHoopDetectionService hoopDetectionService;
+    private IHoopDetectionService hoopDetectionService;
+
+    private ShootingAngles shootingAngles = new ShootingAngles();
 
     @Autowired
-    protected LLMInput llmInput;
+    private IShootingAnglesService shootingAnglesService;
 
     @Autowired
-    protected LLMService llmService;
+    private LLMService llmService;
 
     @Autowired
     private IUserTrainingRecordsService userTrainingRecordsService;
@@ -97,6 +96,8 @@ public class UserSession {
         this.theme = theme;
         this.trainingMethod = trainingMethod;
         this.lastActivityTime = Instant.now();
+        shootingAngles.setTheme(theme);
+        shootingAngles.setUserId(userId);
     }
 
     public UserSession() {
@@ -111,7 +112,8 @@ public class UserSession {
 
     }
 
-    public void stopTraining() {
+    public String stopTraining() {
+        UserTrainingRecords userTrainingRecords = null;
         // 如果是多次投篮，则保存数据并清空缓存；如果是单次投篮，则直接清空缓存
         if (trainingMethod.equals("multiple")) {
             //     public UserTrainingRecords(Long userId, LocalDate trainingDate, BigDecimal trainingTime, String shootingType, String trainingMethod,
@@ -122,12 +124,13 @@ public class UserSession {
                 sb.append(shootingAnalysis.getAnalysis());
             }
             ShootingAnalysis result = new ShootingAnalysis(llmService.analysis(sb.toString(), userId));
-            UserTrainingRecords userTrainingRecords = new UserTrainingRecords(userId, LocalDate.now(), theme, trainingMethod, isGoalList.size(), (int) isGoalList.stream().filter(b -> b).count(),
+            userTrainingRecords = new UserTrainingRecords(userId, LocalDate.now(), theme, trainingMethod, isGoalList.size(), (int) isGoalList.stream().filter(b -> b).count(),
                     result.getAnalysis(), result.getSuggestions(), result.getWeaknessPoints());
             userTrainingRecordsService.save(userTrainingRecords);
+
         }
         else if(trainingMethod.equals("single")){
-            UserTrainingRecords userTrainingRecords = new UserTrainingRecords(userId, LocalDate.now(), theme, trainingMethod, isGoalList.size(), (int) isGoalList.stream().filter(b -> b).count(),
+            userTrainingRecords = new UserTrainingRecords(userId, LocalDate.now(), theme, trainingMethod, isGoalList.size(), (int) isGoalList.stream().filter(b -> b).count(),
                     analysisResultList.get(0).getAnalysis(), analysisResultList.get(0).getSuggestions(), analysisResultList.get(0).getWeaknessPoints());
             userTrainingRecordsService.save(userTrainingRecords);
         }
@@ -135,6 +138,7 @@ public class UserSession {
             throw new RuntimeException("trainingMethod error");
         }
         clean();
+        return userTrainingRecords.getRecordId();
     }
 
     public String analysisImages(String filePath) throws IOException, InterruptedException{
@@ -232,10 +236,10 @@ public class UserSession {
                     bodyAngleSum/=getNumOfFramesToJudgeShootingMoment();
                     kneeAngleSum/=getNumOfFramesToJudgeShootingMoment();
                     // 设置llmInput
-                    getLlmInput().setAimingArmAngle(armAngleSum);
-                    getLlmInput().setAimingBodyAngle(bodyAngleSum);
-                    getLlmInput().setAimingElbowAngle(elbowAngleSum);
-                    getLlmInput().setAimingKneeAngle(kneeAngleSum);
+                    shootingAngles.setAimingArmAngle(armAngleSum);
+                    shootingAngles.setAimingBodyAngle(bodyAngleSum);
+                    shootingAngles.setAimingElbowAngle(elbowAngleSum);
+                    shootingAngles.setAimingKneeAngle(kneeAngleSum);
                 }
             }
             return "unknown";
@@ -249,22 +253,24 @@ public class UserSession {
                 setUserState(UserState.RELEASE);
                 Double releaseAngle= AngleCalculator.calculateAngle(ballPosition,wristPosition,new Point(ballPosition.x,wristPosition.y));
                 BodyAngleData bodyAngleData=getPoseDetectionService().angleDataDetect(filePath);
-                getLlmInput().setReleaseElbowAngle(bodyAngleData.getElbowAngle());
-                getLlmInput().setReleaseArmAngle(bodyAngleData.getArmAngle());
-                getLlmInput().setReleaseBodyAngle(bodyAngleData.getBodyAngle());
-                getLlmInput().setReleaseKneeAngle(bodyAngleData.getKneeAngle());
-                getLlmInput().setReleaseWristAngle(bodyAngleData.getWristAngle());
-                getLlmInput().setReleaseBallAngle(releaseAngle);
+                shootingAngles.setReleaseElbowAngle(bodyAngleData.getElbowAngle());
+                shootingAngles.setReleaseArmAngle(bodyAngleData.getArmAngle());
+                shootingAngles.setReleaseBodyAngle(bodyAngleData.getBodyAngle());
+                shootingAngles.setReleaseKneeAngle(bodyAngleData.getKneeAngle());
+                shootingAngles.setReleaseWristAngle(bodyAngleData.getWristAngle());
+                shootingAngles.setReleaseBallAngle(releaseAngle);
             }
             return "unknown";
         }
         else if(getUserState()==UserState.RELEASE){
             setUserState(UserState.AFTER_SHOOT);
+
+            shootingAnglesService.save(shootingAngles);
+
             // 将投篮数据出传送给LLM
-            llmInput.setTheme(theme);
-            String answer=getLlmService().analysis(getLlmInput(),getUserId());
+            String answer=getLlmService().analysis(shootingAngles,userId);
             ShootingAnalysis shootingAnalysis = new ShootingAnalysis(answer);
-            getAnalysisResultList().add(shootingAnalysis);
+            analysisResultList.add(shootingAnalysis);
 
             getIsGoalList().add(false);
             if(!getWristPositionList().isEmpty())getWristPositionList().clear();
@@ -342,12 +348,12 @@ public class UserSession {
         this.hoopDetectionService = hoopDetectionService;
     }
 
-    public LLMInput getLlmInput() {
-        return llmInput;
+    public ShootingAngles getLlmInput() {
+        return shootingAngles;
     }
 
-    public void setLlmInput(LLMInput llmInput) {
-        this.llmInput = llmInput;
+    public void setLlmInput(ShootingAngles shootingAngles) {
+        this.shootingAngles = shootingAngles;
     }
 
     public LLMService getLlmService() {

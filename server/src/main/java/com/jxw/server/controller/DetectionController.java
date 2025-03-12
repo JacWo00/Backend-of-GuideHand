@@ -1,7 +1,6 @@
 package com.jxw.server.controller;
 
 import com.jxw.server.exception.SessionExpiredException;
-import com.jxw.server.exception.TrainingStopException;
 import com.jxw.server.log.Log;
 import com.jxw.server.request.IdOnlyRequest;
 import com.jxw.server.request.SettingRequest;
@@ -25,7 +24,6 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.InvalidParameterException;
-import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -105,7 +103,7 @@ public class DetectionController {
     }
 
     @Log
-    @AuthToken
+    //@AuthToken
     @PostMapping("/uploadImages")
     @Async
     public SingleShootDetectionResponse uploadImages(
@@ -295,9 +293,9 @@ public class DetectionController {
             UserSession session = userSessions.remove(userId);
             if (session != null) {
                 try {
-                    session.stopTraining();
-                    logger.info("Training stopped for user: {}", userId);
-                    return ResponseEntity.ok(ApiResponse.success());
+                    String recordId=session.stopTraining();
+                    logger.info("Training stopped for user: {}, recordId: {}", userId,recordId);
+                    return ResponseEntity.ok(new ApiResponse("200","Training stopped",recordId));
                 } catch (Exception e) {
                     logger.error("Error stopping training for user: {}", userId, e);
                     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(e.getMessage()));

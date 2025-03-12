@@ -1,15 +1,15 @@
 package com.jxw.server.entity;
 
-import java.math.BigDecimal;
-
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
 import java.time.LocalDate;
 import com.baomidou.mybatisplus.annotation.TableId;
 import java.io.Serializable;
+import java.util.UUID;
+
+import com.github.jeffreyning.mybatisplus.anno.MppMultiId;
 import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
@@ -22,7 +22,6 @@ import lombok.experimental.Accessors;
  * @author author
  * @since 2025-02-25
  */
-@Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
 @TableName("user_training_records")
@@ -31,10 +30,12 @@ public class UserTrainingRecords implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @TableId(value = "record_id", type = IdType.AUTO)
-    private Integer recordId;
+    @MppMultiId
+    @TableField("record_id")
+    private String recordId;
 
-    @TableField("user_id")
+    @MppMultiId
+    @TableField(value = "user_id") // 复合主键字段2
     private String userId;
 
     @TableField("training_date")
@@ -62,6 +63,7 @@ public class UserTrainingRecords implements Serializable {
     private String weaknessPoints;
 
     public UserTrainingRecords(String userId, LocalDate trainingDate, String shootingType, String trainingMethod, Integer attempts, Integer hits, String aiAnalysis, String aiSuggestions, String weaknessPoints) {
+        this.recordId = UUID.randomUUID().toString();
         this.userId = userId;
         this.trainingDate = trainingDate;
 
@@ -74,7 +76,10 @@ public class UserTrainingRecords implements Serializable {
         this.weaknessPoints = weaknessPoints;
     }
 
-    public Integer getRecordId() {
+    public UserTrainingRecords() {
+    }
+
+    public String getRecordId() {
         return recordId;
     }
 
@@ -85,8 +90,6 @@ public class UserTrainingRecords implements Serializable {
     public LocalDate getTrainingDate() {
         return trainingDate;
     }
-
-
 
     public String getShootingType() {
         return shootingType;
@@ -116,7 +119,7 @@ public class UserTrainingRecords implements Serializable {
         return weaknessPoints;
     }
 
-    public void setRecordId(Integer recordId) {
+    public void setRecordId(String recordId) {
         this.recordId = recordId;
     }
 
@@ -127,8 +130,6 @@ public class UserTrainingRecords implements Serializable {
     public void setTrainingDate(LocalDate trainingDate) {
         this.trainingDate = trainingDate;
     }
-
-
 
     public void setShootingType(String shootingType) {
         this.shootingType = shootingType;
